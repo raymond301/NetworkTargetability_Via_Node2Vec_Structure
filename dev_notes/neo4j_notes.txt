@@ -1,0 +1,136 @@
+CALL db.schema.visualization()
+
+INFO: Number of Nuclei:63606
+INFO: Number of WholeCells:63601
+INFO: Error in Segemenation Mask count!
+
+MATCH (n:Gene) WHERE n.Symbol = 'DICER1' RETURN n
+
+MATCH (n:Drug) WHERE n.Name = 'Entrectinib' RETURN n
+
+
+MATCH (n:Pathway) WHERE n.BiocartaId = '100188' RETURN n
+
+MATCH p=(o{value:"a"})-[r*]-(x{value:"b"})
+WHERE ALL(x IN rels(p) WHERE x.property = "foo")
+RETURN p 
+
+MATCH (n:Pathway) WHERE n.Name = 'valine leucine and isoleucine biosynthesis' RETURN n
+
+MATCH (s:Signature) WHERE s.Id = 'CPC004_VCAP_24H:BRD-A19195498-050-09-1:10' RETURN s
+
+
+MATCH (s:Signature)-[:PERTURBED]-(Drug)
+WHERE s.Id = 'CPC004_VCAP_24H:BRD-A19195498-050-09-1:10' 
+RETURN s, Drug
+
+
+L-serine
+MATCH (n:Pathway) WHERE n.Name = 'superpathway of choline degradation to L-serine' RETURN n
+
+MATCH (p1:Pathway { Name: 'valine leucine and isoleucine biosynthesis' }),(p2:Pathway { Name: 'superpathway of choline degradation to L-serine' }), 
+path = shortestPath((p1)-[*..15]-(p2))
+RETURN path
+
+MATCH (p1:Pathway { Name: 'retinol metabolism' }),(p2:Pathway { Name: 'tnfr1 signaling pathway' }), 
+path = shortestPath((p1)-[*..15]-(p2))
+RETURN path
+
+
+MATCH (p1:Gene { Symbol: 'PCK2' }),(p2:Gene { Symbol: 'CTBS' }), 
+path = shortestPath((p1)-[*..15]-(p2))
+RETURN path
+
+MATCH (n:Patient) WHERE n.StudyId = "F01262"
+
+MATCH (n:Patient) WHERE n.StudyId = 'F02102'
+MATCH (n)-[r]-() RETURN n,r
+
+
+
+// Get all vertices.
+MATCH (n)
+WITH collect(n) AS Nodes
+// For each vertices combination...
+WITH [n IN Nodes |
+    [m IN Nodes |
+    // ...Check for edge existence.
+      CASE size((n)-[]-(m))
+      WHEN 0 THEN 0
+      ELSE 1
+    END
+    ]
+] AS AdjacencyMatrix
+// Unroll rows.
+UNWIND AdjacencyMatrix AS AdjacencyRows
+RETURN AdjacencyRows;
+
+
+
+
+CALL apoc.path.subgraphAll(c, {relationshipFilter:'DEPEND_ON', maxLevel: 2, limit:300) 
+YIELD nodes, relationships RETURN nodes, relationships
+
+MATCH (n:Patient {StudyId: 'F01262'})
+SET n.BirthDate = '1950-04-09'
+SET n.Gender = 'MALE'
+SET n.Ethnicity = 'WHITE'
+
+
+MATCH (n:Pathway)
+RETURN count(n) as count
+
+MATCH (p:Pathway)
+RETURN p.Origin AS Source, count(p.Origin) AS Count
+ORDER BY Count ASC;
+
+
+
+CALL gds.alpha.node2vec.stream({
+  nodeProjection: "Pathway",
+  relationshipProjection: {
+    eroad: {
+      type: "BELONGS_TO",
+      orientation: "UNDIRECTED"
+    }
+  },
+  embeddingSize: 6,
+  iterations: 10,
+  walkLength: 10
+})
+YIELD nodeId, embedding
+RETURN gds.util.asNode(nodeId).Name AS pathway, embedding
+LIMIT 5;
+
+
+CALL gds.alpha.node2vec.write({
+  nodeProjection: "Pathway",
+   relationshipProjection: {
+     eroad: {
+       type: "BELONGS_TO",
+       orientation: "UNDIRECTED"
+    }
+   },
+   embeddingSize: 6,
+   iterations: 10,
+   walkLength: 10,
+   writeProperty: "embeddingNode2vec"
+});
+
+
+
+
+
+
+down_genes
+
+up_genes
+
+
+
+
+ClientError: [Statement.SyntaxError] Invalid input 't': expected whitespace, '.', node labels, '[', '^', '*', '/', '%', '+', '-', "=~", IN, STARTS, ENDS, CONTAINS, IS, '=', '~', "<>", "!=", '<', '>', "<=", ">=", AND, XOR, OR, ',' or ']' (line 1, column 105 (offset: 104))
+"MERGE (d:Drug {Id: 'BRD-K73125384', Description: 'Acetic acid N-(2-methoxy-phenyl)-N'-[3-oxo-3H-benzo[b]thiophen-(2Z)-ylidene]-hydrazide' , Collection: 'COMB', PubChem: '5401876'}) MERGE (f:Dose { Amount: 10.0}) MERGE (t:Time { Amount: 6.0}) MERGE (c:CellType {Batch: 'CPC010_HT29_6H', Id: 'HT29'}) MERGE (s:Signature {Id: 'CPC010_HT29_6H:BRD-K73125384-001-05-7:10', SCS: 0.0052, ClusterDistance: 0.959655949089}) MERGE (d)-[:PERTURBED]-(s) MERGE (f)-[:ASSOCIATED]-(s) MERGE (t)-[:ASSOCIATED]-(s) MERGE (c)-[:ASSOCIATED]-(s)"
+
+
+
